@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Real-time Chat</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="fade-in">
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>Real-time Chat</h1>
+            <span id="user-count">Online: 0</span>
+        </div>
+        <div class="chat-main">
+            <div id="messages"></div>
+        </div>
+        <form id="form">
+            <input id="input" autocomplete="off" placeholder="Type a message..." />
+            <button type="submit">Send</button>
+        </form>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const username = localStorage.getItem('username');
+        if (!username) window.location.href = 'login.html';
+        socket.emit('new-user', username);
+
+        const form = document.getElementById('form');
+        const input = document.getElementById('input');
+        const messages = document.getElementById('messages');
+
+        socket.on('chat-message', data => {
+            const item = document.createElement('div');
+            item.textContent = data.name + ": " + data.message;
+            messages.appendChild(item);
+            messages.scrollTop = messages.scrollHeight;
+        });
+
+        socket.on('user-count', count => {
+            document.getElementById('user-count').textContent = "Online: " + count;
+        });
+
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            if (input.value.trim()) {
+                socket.emit('send-chat-message', input.value.trim());
+                input.value = '';
+            }
+        });
+    </script>
+</body>
+</html>
